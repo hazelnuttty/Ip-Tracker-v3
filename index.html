@@ -1,0 +1,159 @@
+<!DOCTYPE html><html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>https://ip-tracker-by-hazelnut.com</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1e1e1e;
+            color: white;
+            padding: 20px;
+        }
+        h2 { margin-bottom: 10px; }
+        input {
+            padding: 10px;
+            width: 250px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #0056b3; }
+        #status { margin-top: 10px; font-size: 18px; font-weight: bold; }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #2a2a2a;
+            display: none;
+            text-align: left;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h2>IP TRACKER BY HAZELNUT</h2>
+    <input type="text" id="ipInput" placeholder="Masukkan IP">
+    <br>
+    <span>Server:</span>
+    <span id="status">🚨 waiting for IP confirmation</span>
+    <br><br>
+    <button id="trackBtn" onclick="trackIP()">Lacak</button>
+    <div id="result"></div><script>
+    let requestCount = localStorage.getItem("requestCount") || 0;
+    let lastRequestDate = localStorage.getItem("lastRequestDate") || "";
+    let today = new Date().toISOString().split("T")[0];
+
+    if (lastRequestDate !== today) {
+        localStorage.setItem("requestCount", 0);
+        localStorage.setItem("lastRequestDate", today);
+        requestCount = 0;
+    }
+
+    function updateButton() {
+        let trackBtn = document.getElementById("trackBtn");
+        if (requestCount >= 5) {
+            trackBtn.innerHTML = "💰 Buy Limit";
+            trackBtn.setAttribute("onclick", "buyLimit()");
+            document.getElementById("status").innerHTML = "💰 your request is finished";
+        } else {
+            trackBtn.innerHTML = "Lacak";
+            trackBtn.setAttribute("onclick", "trackIP()");
+        }
+    }
+
+    async function buyLimit() {
+        let phone = "6285183131924";
+        let webhookURL = "https://discord.com/api/webhooks/1349395595634413588/_JW6JgGevMoz86csKyxBeurtFKDoBsucOU5igrCNJTjuZQ2P2eAUWjl6DuC52Q1CJH4r"; // Ganti dengan webhook lo
+
+        let payload = JSON.stringify({ content: "Pembeli baru: +" + phone });
+        await fetch(webhookURL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: payload
+        });
+
+        window.location.href = `https://wa.me/${phone}?text=misi+kak+hazel+aku+mau+beli+limit+dong`;
+
+        setTimeout(() => {
+            localStorage.setItem("requestCount", 0);
+            requestCount = 0;
+            document.getElementById("status").innerHTML = "🚨 waiting for IP confirmation";
+            updateButton();
+            alert("Limit successfully reset!");
+        }, 5000);
+    }
+
+    async function trackIP() {
+        if (requestCount >= 5) {
+            updateButton();
+            return;
+        }
+
+        let ipInput = document.getElementById("ipInput");
+        let ip = ipInput.value.trim();
+        let statusEl = document.getElementById("status");
+        let resultEl = document.getElementById("result");
+
+        if (!ip) {
+            alert("Masukkan alamat IP dulu!");
+            return;
+        }
+
+        statusEl.innerHTML = "⌛ please wait";
+        resultEl.style.display = "none";
+
+        try {
+            let response = await fetch(`https://ipwhois.app/json/${ip}`);
+            let data = await response.json();
+
+            if (!data || data.success === false) {
+                statusEl.innerHTML = "❎ Failed to track";
+                alert("Gagal melacak alamat IP!");
+                ipInput.value = "";
+                return;
+            }
+
+            let hasil = `<strong>🔍 IP Address Lookup 🔍</strong><br><br>` +
+                        `🌍 <strong>IP:</strong> ${data.ip}<br>` +
+                        `🌐 <strong>Country:</strong> ${data.country} (${data.country_code})<br>` +
+                        `🏙️ <strong>City:</strong> ${data.city}<br>` +
+                        `📡 <strong>ISP:</strong> ${data.isp}<br>` +
+                        `📍 <strong>Latitude:</strong> ${data.latitude}<br>` +
+                        `📍 <strong>Longitude:</strong> ${data.longitude}<br>` +
+                        `⏰ <strong>Timezone:</strong> ${data.timezone}<br>`;
+
+            resultEl.innerHTML = hasil;
+            resultEl.style.display = "block";
+            statusEl.innerHTML = "✅ successfully tracked";
+            
+            requestCount++;
+            localStorage.setItem("requestCount", requestCount);
+            updateButton();
+        } catch (error) {
+            console.error("Error:", error);
+            statusEl.innerHTML = "❎ There is an error";
+            alert("Terjadi kesalahan pada server!");
+            ipInput.value = "";
+        }
+    }
+
+    updateButton();
+</script>
+
+</body>
+</html>
